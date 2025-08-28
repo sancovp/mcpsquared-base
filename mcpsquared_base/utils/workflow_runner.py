@@ -42,7 +42,7 @@ async def run_workflow(workflow_name: str, workflow_args: Dict[str, Any], allowe
         workflow_config = _load_workflow_config(workflow_name, config_dir)
         
         # Load agent config
-        agent_config = _load_agent_config(workflow_config["agent_config_name"])
+        agent_config = _load_agent_config(workflow_config["agent_config_name"], config_dir)
         
         # Merge configs
         complete_config = _merge_configs(workflow_config, agent_config)
@@ -78,7 +78,7 @@ def _load_workflow_config(workflow_name: str, config_dir: str = None) -> Dict[st
 def _get_workflow_config_path(workflow_name: str, config_dir: str = None) -> Path:
     """Get the path to workflow configuration file"""
     if config_dir:
-        return Path(config_dir) / f"{workflow_name}.json"
+        return Path(config_dir) / "workflows" / f"{workflow_name}.json"
     else:
         env_config_dir = os.getenv("MCPSQUARED_CONFIG_DIR")
         if not env_config_dir:
@@ -101,25 +101,20 @@ def _read_config_file(config_path: Path) -> Dict[str, Any]:
         raise ValueError(f"Invalid JSON in config {config_path}: {e}")
 
 
-def _load_agent_config(agent_config_name: str) -> Dict[str, Any]:
+def _load_agent_config(agent_config_name: str, config_dir: str = None) -> Dict[str, Any]:
     """Load agent configuration from file"""
-    config_dir = os.getenv("MCPSQUARED_CONFIG_DIR")
-    if not config_dir:
-        raise ValueError("MCPSQUARED_CONFIG_DIR environment variable not set")
-    config_path = Path(f"{config_dir}/agents/{agent_config_name}.json")
-    
-    if not config_path.exists():
-        raise FileNotFoundError(f"Agent config not found: {config_path}")
-    
-    try:
-        with open(config_path, 'r') as f:
-            config = json.load(f)
-        logger.debug(f"Loaded agent config: {agent_config_name}")
-        return config
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in agent config {config_path}: {e}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        raise ValueError(f"Invalid JSON in agent config {config_path}: {e}")
+    config_path = _get_agent_config_path(agent_config_name, config_dir)
+    return _read_config_file(config_path)
+
+def _get_agent_config_path(agent_config_name: str, config_dir: str = None) -> Path:
+    """Get the path to agent configuration file"""
+    if config_dir:
+        return Path(config_dir) / "agents" / f"{agent_config_name}.json"
+    else:
+        env_config_dir = os.getenv("MCPSQUARED_CONFIG_DIR")
+        if not env_config_dir:
+            raise ValueError("MCPSQUARED_CONFIG_DIR environment variable not set")
+        return Path(f"{env_config_dir}/agents/{agent_config_name}.json")
 
 
 def _merge_configs(workflow_config: Dict[str, Any], agent_config: Dict[str, Any]) -> Dict[str, Any]:

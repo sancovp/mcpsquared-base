@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="mcpsquared-base",
-    version="0.1.2",
+    version="0.1.3",
     description="Base package for MCPSquared - provides universal loaders/runners and chain selection MCP server",
     packages=find_packages(),
     install_requires=[
