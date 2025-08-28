@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g., 1.0.0)'
+        description: 'Release version (e.g., 0.1.1)'
         required: true
         type: string
 
@@ -13,22 +13,38 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Create filtered archive
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install build dependencies
       run: |
-        git archive --format=tar.gz --prefix=heaven-framework/ HEAD | \
-        tar --delete --wildcards 'heaven-framework/ideas/*' | \
-        gzip > heaven-framework-v${{ inputs.version }}.tar.gz
+        python -m pip install --upgrade pip
+        pip install build twine
+    
+    - name: Update version
+      run: |
+        sed -i 's/version = ".*"/version = "${{ inputs.version }}"/' pyproject.toml
+    
+    - name: Build package
+      run: python -m build
+    
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
     
     - name: Create public release
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
         gh release create v${{ inputs.version }} \
-          --title "HEAVEN Framework v${{ inputs.version }}" \
-          --notes "Public release of HEAVEN Framework" \
-          --draft \
-          heaven-framework-v${{ inputs.version }}.tar.gz
+          --title "mcpsquared-base v${{ inputs.version }}" \
+          --notes "Public release of mcpsquared-base package" \
+          dist/*

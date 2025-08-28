@@ -1,0 +1,17 @@
+{
+  "workflow_name": "chain_selector_workflow",
+  "agent_config_name": "chain_selector_agent",
+  "mcp_client_config": {
+    "mcpServers": {
+      "chain_selection": {
+        "command": "python",
+        "args": ["${CHAIN_SELECTION_MCP_SERVER_PATH}"],
+        "transport": "stdio"
+      }
+    }
+  },
+  "disallowed_tools": [],
+  "additional_instructions": "You must use write_chain_selection_tool to save your selected chain sequence.",
+  "input_prompt": "Select the workflows in the pool to assemble the most superb chain of workflows for the job. The job is: {{user_request}}\n\nAvailable tools: {{available_tools}}",
+  "templated_args": ["user_request", "available_tools"]
+}
