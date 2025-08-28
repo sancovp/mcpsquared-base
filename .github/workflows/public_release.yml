@@ -1,12 +1,9 @@
 name: Public Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version (e.g., 0.1.1)'
-        required: true
-        type: string
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   release:
@@ -28,9 +25,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install build twine
     
+    - name: Extract version from tag
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+    
     - name: Update version
       run: |
-        sed -i 's/version = ".*"/version = "${{ inputs.version }}"/' pyproject.toml
+        sed -i 's/version = ".*"/version = "${{ steps.version.outputs.VERSION }}"/' pyproject.toml
     
     - name: Build package
       run: python -m build
@@ -44,7 +45,7 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        gh release create v${{ inputs.version }} \
-          --title "mcpsquared-base v${{ inputs.version }}" \
+        gh release create v${{ steps.version.outputs.VERSION }} \
+          --title "mcpsquared-base v${{ steps.version.outputs.VERSION }}" \
           --notes "Public release of mcpsquared-base package" \
           dist/*
