@@ -16,7 +16,7 @@ from .agent_runner import agent_runner
 logger = logging.getLogger(__name__)
 
 
-async def run_workflow(workflow_name: str, workflow_args: Dict[str, Any], allowed_tools: list = None) -> str:
+async def run_workflow(workflow_name: str, workflow_args: Dict[str, Any], allowed_tools: list = None, config_dir: str = None) -> str:
     """
     Execute a workflow by name with provided arguments
     
@@ -24,6 +24,7 @@ async def run_workflow(workflow_name: str, workflow_args: Dict[str, Any], allowe
         workflow_name: Name of workflow to execute
         workflow_args: Arguments to pass to workflow
         allowed_tools: Optional list of tools to limit agent to (acts as sequence/filter)
+        config_dir: Optional path to directory containing workflow config files (e.g., "/path/to/configs/workflows")
         
     Returns:
         Formatted result from workflow execution
@@ -38,7 +39,7 @@ async def run_workflow(workflow_name: str, workflow_args: Dict[str, Any], allowe
     
     try:
         # Load workflow config
-        workflow_config = _load_workflow_config(workflow_name)
+        workflow_config = _load_workflow_config(workflow_name, config_dir)
         
         # Load agent config
         agent_config = _load_agent_config(workflow_config["agent_config_name"])
@@ -69,25 +70,35 @@ async def run_workflow(workflow_name: str, workflow_args: Dict[str, Any], allowe
         raise
 
 
-def _load_workflow_config(workflow_name: str) -> Dict[str, Any]:
+def _load_workflow_config(workflow_name: str, config_dir: str = None) -> Dict[str, Any]:
     """Load workflow configuration from file"""
-    config_dir = os.getenv("MCPSQUARED_CONFIG_DIR")
-    if not config_dir:
-        raise ValueError("MCPSQUARED_CONFIG_DIR environment variable not set")
-    config_path = Path(f"{config_dir}/workflows/{workflow_name}.json")
-    
+    config_path = _get_workflow_config_path(workflow_name, config_dir)
+    return _read_config_file(config_path)
+
+def _get_workflow_config_path(workflow_name: str, config_dir: str = None) -> Path:
+    """Get the path to workflow configuration file"""
+    if config_dir:
+        return Path(config_dir) / f"{workflow_name}.json"
+    else:
+        env_config_dir = os.getenv("MCPSQUARED_CONFIG_DIR")
+        if not env_config_dir:
+            raise ValueError("MCPSQUARED_CONFIG_DIR environment variable not set")
+        return Path(f"{env_config_dir}/workflows/{workflow_name}.json")
+
+def _read_config_file(config_path: Path) -> Dict[str, Any]:
+    """Read and parse JSON configuration file"""
     if not config_path.exists():
         raise FileNotFoundError(f"Workflow config not found: {config_path}")
     
     try:
         with open(config_path, 'r') as f:
             config = json.load(f)
-        logger.debug(f"Loaded workflow config: {workflow_name}")
+        logger.debug(f"Loaded config from: {config_path}")
         return config
     except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in workflow config {config_path}: {e}")
+        logger.error(f"Invalid JSON in config {config_path}: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
-        raise ValueError(f"Invalid JSON in workflow config {config_path}: {e}")
+        raise ValueError(f"Invalid JSON in config {config_path}: {e}")
 
 
 def _load_agent_config(agent_config_name: str) -> Dict[str, Any]:
