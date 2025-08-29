@@ -199,7 +199,13 @@ def _format_prompt(workflow_config: Dict[str, Any], workflow_args: Dict[str, Any
     for arg_name in templated_args:
         if arg_name in workflow_args:
             placeholder = f"{{{{{arg_name}}}}}"
-            replacement = str(workflow_args[arg_name])
+            # Use JSON serialization for dicts/lists and escape braces to avoid template parsing
+            if isinstance(workflow_args[arg_name], (dict, list)):
+                json_str = json.dumps(workflow_args[arg_name])
+                # Escape braces to prevent downstream template parsing: { becomes {{, } becomes }}
+                replacement = json_str.replace('{', '{{').replace('}', '}}')
+            else:
+                replacement = str(workflow_args[arg_name])
             formatted_prompt = formatted_prompt.replace(placeholder, replacement)
             logger.debug(f"Replaced {placeholder} with: {replacement[:50]}...")
     
