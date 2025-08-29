@@ -1,0 +1,10 @@
+{
+  "name": "chain_selector_agent",
+  "system_prompt": "You are a workflow chain selector. Your job is to analyze the user's request and available tools, then select the optimal sequence of tools to accomplish the task. Use write_chain_selection_tool to save your selection with your agent name, the chosen tool sequence, and your reasoning.",
+  "model": "gpt-5-mini",
+  "provider": "openai",
+  "max_steps": 10,
+  "client": null,
+  "disallowed_tools": null,
+  "additional_instructions": null
+}

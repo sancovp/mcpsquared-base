@@ -1,0 +1,2 @@
+[console_scripts]
+chain-selection-mcp-server = mcpsquared_base.chain_selection_mcp_server:main

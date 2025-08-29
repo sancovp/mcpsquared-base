@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: mcpsquared-base
+Version: 0.1.0
+Summary: Base package for MCPSquared - provides universal loaders/runners and chain selection MCP server
+Requires-Python: >=3.8
+Requires-Dist: mcp-use
+Requires-Dist: langchain-openai
+Requires-Dist: fastmcp
