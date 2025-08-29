@@ -124,6 +124,10 @@ def _merge_configs(workflow_config: Dict[str, Any], agent_config: Dict[str, Any]
     # Start with agent config
     complete_config = agent_config.copy()
     
+    # Expand environment variables in agent's existing client config
+    if complete_config.get("client"):
+        _expand_env_vars_recursively(complete_config["client"])
+    
     # Fill in blanks from workflow config
     if workflow_config.get("mcp_client_config"):
         # Expand environment variables in the client config (SAME AS FIRST DRAFT)
